@@ -1,9 +1,10 @@
-const express = require('express')
+const express = require('express');
 const router = express.Router();
-const User = require('../models/user')
+const User = require('../models/user');
 
-const passport = require('passport')
-const jwt = require('jsonwebtoken')
+const passport = require('passport');
+const jwt = require('jsonwebtoken');
+const config = require('../config/database');
 
 router.post('/register', (req, res, next) => {
     let newUser = new User({
@@ -13,21 +14,52 @@ router.post('/register', (req, res, next) => {
         password: req.body.password
     });
 
-    User.addUser(newUser, (err, user)=>{
-        if(err){
-            res.json({success: false, msg:'Failed to register new user'});
+    User.addUser(newUser, (err, user) => {
+        if (err) {
+            res.json({ success: false, msg: 'Failed to register new user' });
         } else {
-            res.json({success:true, msg:'successfully registered'});
+            res.json({ success: true, msg: 'successfully registered' });
         }
     });
 });
 
 router.post('/authenticate', (req, res, next) => {
-    res.send('AUTHENTICATE');
+    const username = req.body.username;
+    const password = req.body.password;
+
+    User.getUserByUsername(username, (err, user) => {
+        if (err) {
+            throw err;
+        }
+        if (!user) {
+            return res.json({ success: false, msg: 'user not found' });
+        }
+
+        User.comparePassword(password, user.password, (err, isMatch) => {
+            if (err) throw err;
+            if (isMatch) {
+                const token = jwt.sign({user}, config.secret, {
+                    expiresIn: 604800
+                });
+                res.json({
+                    success: true,
+                    token: 'bearer ' + token,
+                    user: {
+                        id: user._id,
+                        name: user.name,
+                        username: user.username,
+                        email: user.email
+                    }
+                });
+            } else {
+                res.json({ success: false, msg: 'User not found' });
+            }
+        });
+    });
 });
 
-router.get('/profile', (req, res, next) => {
-    res.send('PROFILE');
+router.get('/profile',passport.authenticate('jwt', {session: false}), (req, res, next) => {
+    res.json({user: req.user}); 
 });
 
 router.get('/validate', (req, res, next) => {
