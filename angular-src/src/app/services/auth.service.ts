@@ -14,6 +14,18 @@ export class AuthService {
 
   registerUser(user) {
     let headers = new HttpHeaders().set('Content-Type', 'application/json');
-    return this.http.post('http://localhost:5000/users/register', user, { headers: headers }).pipe(map((res:any)=> res));
+    return this.http.post('http://localhost:5000/users/register', user, { headers: headers }).pipe(map((res: any) => res));
+  }
+
+  authenticateUser(user) {
+    let headers = new HttpHeaders().set('Content-Type', 'application/json');
+    return this.http.post('http://localhost:5000/users/authenticate', user, { headers: headers }).pipe(map((res: any) => res));
+  }
+
+  storeUserData(token, user) {
+    localStorage.setItem('id_token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    this.authToken = token;
+    this.user = user;
   }
 }
