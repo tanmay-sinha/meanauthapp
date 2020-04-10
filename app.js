@@ -6,7 +6,7 @@ const passport = require('passport');
 const mongoose = require('mongoose');
 const config = require('./config/database');
 
-mongoose.connect(config.database);
+mongoose.connect(config.database, {useNewUrlParser:true, useUnifiedTopology:true});
 
 mongoose.connection.on('error', (err) => {
     console.log('Database error:' + err);
